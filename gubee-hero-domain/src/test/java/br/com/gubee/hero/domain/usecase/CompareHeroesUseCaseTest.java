@@ -1,0 +1,85 @@
+package br.com.gubee.hero.domain.usecase;
+
+import br.com.gubee.hero.domain.api.hero.CompareHeroes;
+import br.com.gubee.hero.domain.enums.Race;
+import br.com.gubee.hero.domain.model.hero.ComparedHeroes;
+import br.com.gubee.hero.domain.model.hero.Hero;
+import br.com.gubee.hero.domain.model.powerstats.PowerStats;
+import br.com.gubee.hero.domain.spi.hero.HeroRepository;
+import br.com.gubee.hero.domain.spi.hero.HeroRepositoryStub;
+import br.com.gubee.hero.domain.spi.powerstats.PowerStatsRepository;
+import br.com.gubee.hero.domain.spi.powerstats.PowerStatsRepositoryStub;
+import br.com.gubee.hero.domain.usecase.hero.CompareHeroesUseCase;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class CompareHeroesUseCaseTest {
+
+    private final HeroRepository heroRepositoryStub = new HeroRepositoryStub();
+    private final PowerStatsRepository powerStatsRepositoryStub = new PowerStatsRepositoryStub();
+    private final CompareHeroes compareHeroes = new CompareHeroesUseCase(heroRepositoryStub, powerStatsRepositoryStub);
+    private Hero firstHero;
+    private Hero secondHero;
+
+    @BeforeEach
+    void setup() {
+        var firstPowerStats = PowerStats.builder()
+                .agility(5)
+                .dexterity(8)
+                .strength(6)
+                .intelligence(10)
+                .build();
+        firstPowerStats = powerStatsRepositoryStub.create(firstPowerStats);
+        firstHero = Hero.builder()
+                .name("BATMAN")
+                .race(Race.HUMAN)
+                .powerStatsId(firstPowerStats.getId())
+                .build();
+        heroRepositoryStub.create(firstHero);
+
+        //Second Hero
+        var secondPowerStats = PowerStats.builder()
+                .agility(7)
+                .dexterity(4)
+                .strength(10)
+                .intelligence(8)
+                .build();
+        secondPowerStats = powerStatsRepositoryStub.create(secondPowerStats);
+        secondHero = Hero.builder()
+                .name("SUPERMAN")
+                .race(Race.ALIEN)
+                .powerStatsId(secondPowerStats.getId())
+                .build();
+        heroRepositoryStub.create(secondHero);
+    }
+
+
+    @Test
+    @DisplayName("Should compare two heroes attributes and return them")
+    void shouldCompareHeroesAttributesAndReturnThem() {
+        //Given
+        //Expected result
+        ComparedHeroes expected = ComparedHeroes.builder()
+                .firstId(firstHero.getId())
+                .firstAgility(-5)
+                .firstDexterity(8)
+                .firstStrength(-6)
+                .firstIntelligence(10)
+
+                .secondId(secondHero.getId())
+                .secondAgility(7)
+                .secondDexterity(-4)
+                .secondStrength(10)
+                .secondIntelligence(-8)
+                .build();
+
+        //When
+        ComparedHeroes result = compareHeroes.compareHeroes("BATMAN", "SUPERMAN");
+        //Then
+        assertEquals(expected, result);
+    }
+
+}
